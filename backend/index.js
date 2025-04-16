@@ -7,7 +7,7 @@ const app = express()
 app.set('view engine', 'ejs')
 
 app.get('/', (req, res)=>{
-    res.render('index.ejs')
+    res.render('index.ejs', { products })
 })
 app.post('/checkout', async (req, res)=>{
     const session = await stripe.checkout.sessions.create({
@@ -54,4 +54,4 @@ app.get('/cancel', (req, res)=>{
     res.redirect('/')
 })
 
-app.listen(3000, ()=>{console.log("online!")})
+app.listen(3001, ()=>{console.log("online!")})
