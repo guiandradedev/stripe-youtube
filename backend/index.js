@@ -1,8 +1,12 @@
 require('dotenv').config()
 const express = require('express')
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
+const cors = require('cors'); // Import the cors package
 
 const app = express()
+app.use(cors());
+
+app.use(express.json())
 
 app.set('view engine', 'ejs')
 
@@ -10,6 +14,22 @@ app.get('/', (req, res)=>{
     res.render('index.ejs', { products })
 })
 app.post('/checkout', async (req, res)=>{
+    const { items } = req.body
+    const lineItems = items.map(item => {
+        return {
+            price_data: {
+                currency: item.currency,
+                product_data: {
+                    id: item.id,
+                    name: item.name,
+                    description: item.description,
+                },
+                unit_amount: item.price * 100
+            },
+            quantity: item.quantity
+        }
+    }
+    )
     const session = await stripe.checkout.sessions.create({
         line_items: [{
             price_data: {
@@ -27,16 +47,21 @@ app.post('/checkout', async (req, res)=>{
             allowed_countries: ['BR']
         },
         mode: 'payment', // or subscription
-        success_url: `${process.env.BASE_URL}/complete?session_id={CHECKOUT_SESSION_ID}`, // redirect URL after successful payment
-        cancel_url: `${process.env.BASE_URL}/cancel`, // redirect URL if the user cancels the payment
+        success_url: `${req.headers.origin}/complete?session_id={CHECKOUT_SESSION_ID}`, // redirect URL after successful payment
+        cancel_url: `${req.headers.origin}/cancel`, // redirect URL if the user cancels the payment
     })
 
-    // This function creates a payment intent.
-    // It generates a Stripe session and a payment link for the Stripe Checkout page.
+    // // This function creates a payment intent.
+    // // It generates a Stripe session and a payment link for the Stripe Checkout page.
 
-    console.log(session)
+    // console.log(session)
 
-    res.redirect(session.url)
+    return res.status(200).json({
+        id: session.id,
+        url: session.url
+    })
+
+    // res.redirect(session.url)
 })
 
 app.get('/complete', async (req, res)=>{
