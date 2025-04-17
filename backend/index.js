@@ -24,25 +24,27 @@ app.post('/checkout', async (req, res)=>{
                     name: item.name,
                     description: item.description,
                 },
-                unit_amount: item.price * 100
+                unit_amount: item.unit_price * 100
             },
             quantity: item.quantity
         }
     }
     )
+    console.log(lineItems)
     const session = await stripe.checkout.sessions.create({
-        line_items: [{
-            price_data: {
-                currency: 'usd',
-                product_data: {
-                    name: "Node.js book",
-                    // optional description of the product
-                    // description: "lorem ipsum dolor",
-                },
-                unit_amount: 50 * 100 // price in cents (e.g., $50.00)
-            },
-            quantity: 1
-        }],
+        line_items: lineItems,
+        // line_items: [{
+        //     price_data: {
+        //         currency: 'usd',
+        //         product_data: {
+        //             name: "Node.js book",
+        //             // optional description of the product
+        //             // description: "lorem ipsum dolor",
+        //         },
+        //         unit_amount: 50 * 100 // price in cents (e.g., $50.00)
+        //     },
+        //     quantity: 1
+        // }],
         shipping_address_collection: {
             allowed_countries: ['BR']
         },
